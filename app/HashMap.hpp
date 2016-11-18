@@ -120,6 +120,8 @@ public:
     // HashMap's largest bucket.
     unsigned int maxBucketSize() const;
 
+    void clearAndResetSize();
+
     void printBuckets();
 
 private:

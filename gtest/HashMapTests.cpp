@@ -130,18 +130,15 @@ TEST(TestHashMap, CopyConstructor)
 TEST(TestHashMap, ReHash)
 {
     HashMap storage;
-    std::cout << "empty " << storage.size() << " " << storage.bucketCount() << std::endl;
     storage.add("one", "jisdk");
     storage.add("two", "fasiod");
     storage.add("three", "fasiod");
     storage.add("four", "fasiod");
-    std::cout << "4 elements " << storage.size() << " " << storage.bucketCount() << std::endl;
     ASSERT_EQ(0.4, storage.loadFactor());
     storage.add("five", "fasiod");
     storage.add("six", "whoop");
     storage.add("seven", "fasiod");
     storage.add("eight", "fasiod");
-    std::cout << "8 elements " << storage.size() << " " << storage.bucketCount() << std::endl;
     ASSERT_EQ(0.8, storage.loadFactor());
     storage.add("nine", "fasiod");
     storage.add("ten", "fasiod");
@@ -150,4 +147,3 @@ TEST(TestHashMap, ReHash)
     storage.add("twelve", "fasiod");
     ASSERT_EQ((double(12)/21), storage.loadFactor());
 }
-

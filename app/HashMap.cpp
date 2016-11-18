@@ -143,6 +143,14 @@ unsigned int HashMap::maxBucketSize() const
     return largest;
 }
 
+void HashMap::clearAndResetSize()
+{
+    cleanBuckets(buckets);
+    numberOfBuckets = 10;
+    numberOfPairs = 0;
+    buckets = new Node*[numberOfBuckets]{nullptr};
+}
+
 /*
  * Helper member functions defined below here
  */
