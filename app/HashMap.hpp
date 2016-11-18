@@ -147,6 +147,9 @@ private:
 
     void addToEnd(HashMap::Node* pointerToNode, const std::string& key, const std::string& value);
 
+    void rehashBuckets();
+    bool weShouldReHash();
+
     void cleanBuckets(Node**);
     void cleanBucket(Node*);
 
@@ -155,7 +158,9 @@ private:
     Node** copyBuckets(Node**, int);
     void copyLinkedList(Node*, Node*);
 
-    int findIndex(const std::string& key) const;
+    void addKeyValue(Node**, int, const std::string&, const std::string&);
+
+    int findIndex(const std::string&, int) const;
 
     unsigned int count(const Node* node) const;
 

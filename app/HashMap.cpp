@@ -50,18 +50,14 @@ HashMap::~HashMap()
 
 void HashMap::add(const std::string& key, const std::string& value)
 {
-    int index = findIndex(key);
-
-    // This should only happen if bucket is empty
-    if (buckets[index] == nullptr) {
-        buckets[index] = new Node;
-        buckets[index]->key = key;
-        buckets[index]->value = value;
-        buckets[index]->next = nullptr;
+    // do nothing if key is already in here
+    if (!contains(key)) {
+        if (weShouldReHash()) {
+            rehashBuckets();
+        }
+        // now add the key value in
+        addKeyValue(buckets, numberOfBuckets, key, value);
         numberOfPairs++;
-    }
-    else {
-        addToEnd(buckets[index], key, value);
     }
 }
 
@@ -69,7 +65,7 @@ void HashMap::remove(const std::string &key)
 {
     // do nothing if key is not in HashMap
     if (contains(key)) {
-        int index = findIndex(key);
+        int index = findIndex(key, numberOfBuckets);
         Node *previous = buckets[index];
         Node *current = previous;
         while (true) {
@@ -154,7 +150,7 @@ unsigned int HashMap::maxBucketSize() const
 HashMap::Node* HashMap::traverseAndFind(const std::string& key) const
 {
     // start our search in the correct bucket.
-    Node* node = buckets[findIndex(key)];
+    Node* node = buckets[findIndex(key, numberOfBuckets)];
     while (node != nullptr) {
         if (node->key == key) {
             // found our match! return the node
@@ -215,20 +211,16 @@ unsigned int defaultHasher(const std::string& key)
 
 void HashMap::addToEnd(HashMap::Node* pointerToNode, const std::string& key, const std::string& value)
 {
-    // Do not add anything if key is already in here
-     if (pointerToNode->key != key) {
-        // Found the end of the linked list, add it there
-        if (pointerToNode->next == nullptr) {
-            pointerToNode->next = new Node;
-            pointerToNode->next->key = key;
-            pointerToNode->next->value = value;
-            pointerToNode->next->next = nullptr;
-            numberOfPairs++;
-        }
-        // Move forward through the linked list
-        else {
-            addToEnd(pointerToNode->next, key, value);
-        }
+    // Found the end of the linked list, add it there
+    if (pointerToNode->next == nullptr) {
+        pointerToNode->next = new Node;
+        pointerToNode->next->key = key;
+        pointerToNode->next->value = value;
+        pointerToNode->next->next = nullptr;
+    }
+    // Move forward through the linked list
+    else {
+        addToEnd(pointerToNode->next, key, value);
     }
 }
 
@@ -260,10 +252,10 @@ void HashMap::cleanBucket(HashMap::Node* link)
     }
 }
 
-int HashMap::findIndex(const std::string &key) const
+int HashMap::findIndex(const std::string &key, int bucketNumber) const
 {
     // using % on unsigned int ensures our index will be inside our array
-    return hasher(key) % numberOfBuckets;
+    return hasher(key) % bucketNumber;
 }
 
 unsigned int HashMap::count(const Node* node) const
@@ -275,6 +267,53 @@ unsigned int HashMap::count(const Node* node) const
         node = node->next;
     }
     return counter;
+}
+
+void HashMap::rehashBuckets()
+{
+    // first, make new array
+    unsigned int newNumberOfBuckets = (numberOfBuckets * 2) + 1;
+    Node** newBuckets = new Node*[newNumberOfBuckets]{nullptr};
+
+    // second, hash all key/values into new array
+    Node* current;
+    for (int i=0; i < numberOfBuckets; ++i) {
+        if (buckets[i] != nullptr) {
+            current = buckets[i];
+            while (current != nullptr) {
+                addKeyValue(newBuckets, newNumberOfBuckets, current->key, current->value);
+                current = current->next;
+            }
+        }
+    }
+    // third, clear memory of old array, store the new in object
+    cleanBuckets(buckets);
+    buckets = newBuckets;
+    numberOfBuckets = newNumberOfBuckets;
+}
+
+void HashMap::addKeyValue(Node** buckets, int bucketNumber,
+                 const std::string& key, const std::string& value)
+{
+    int index = findIndex(key, bucketNumber);
+
+    // This should only happen if bucket is empty
+    if (buckets[index] == nullptr) {
+        buckets[index] = new Node;
+        buckets[index]->key = key;
+        buckets[index]->value = value;
+        buckets[index]->next = nullptr;
+    } else {
+        addToEnd(buckets[index], key, value);
+    }
+}
+
+bool HashMap::weShouldReHash()
+{
+    // this is same as loadFactor but with + 1 on number of pairs
+    // this function will be used before adding a key value pair
+    // to know whether to rehash or not
+    return (double(numberOfPairs+1)/numberOfBuckets) > .8;
 }
 
 // the following two functions were used for testing. they
